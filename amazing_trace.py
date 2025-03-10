@@ -4,70 +4,31 @@ import numpy as np
 from matplotlib.ticker import MaxNLocator
 import time
 import os
+import subprocess
+import re
 
 def execute_traceroute(destination):
-    """
-    Executes a traceroute to the specified destination and returns the output.
-
-    Args:
-        destination (str): The hostname or IP address to trace
-
-    Returns:
-        str: The raw output from the traceroute command
-    """
-    # Your code here
-    # Hint: Use the subprocess module to run the traceroute command
-    # Make sure to handle potential errors
-
-    # Remove this line once you implement the function,
-    # and don't forget to *return* the output
-    pass
+    response = subprocess.run(["sudo", "traceroute", "-I", destination], capture_output=True) # Runs the command to traceroute
+    return response # Returns the command
 
 def parse_traceroute(traceroute_output):
-    """
-    Parses the raw traceroute output into a structured format.
+    final_output = []
+    lines = traceroute_output.split("\n") # Splits the whole trace_output into seprate lines for easy handeling
+    for line in lines:
+        match = re.match(r"^\s*(\d+)\s+([\w\.-]+)?\s*\(?([\d\.]+)?\)?\s*(\d+\.\d+ ms)?\s*(\d+\.\d+ ms)?\s*(\d+\.\d+ ms)?", line) # Paramaters for splitting the lines into hops, ip, name and time
+        if match:
+            hop_dict = {} # Dictonary for return
+            hop_dict["hop"] = int(match.group(1)) # Checks in first (), to match for the number of hops
+            hop_dict["ip"] = match.group(3) if match.group(3) else None # Checks in second (), to match for the number of hops, and returns None if it does not match
+            hop_dict["hostname"] = match.group(2) if match.group(2) else None # Checks in third (), to match for the number of hops, and returns None if it does not match
+            hop_dict["rtt"] = [
+                float(match.group(4).split()[0]) if match.group(4) else None, # Uses float to handle decimals, and uses same group functionality as before
+                float(match.group(5).split()[0]) if match.group(5) else None, # Uses float to handle decimals, and uses same group functionality as before
+                float(match.group(6).split()[0]) if match.group(6) else None # Uses float to handle decimals, and uses same group functionality as before
+                ]           
+            final_output.append(hop_dict) # Adds the dictionary to final_output
+    return final_output
 
-    Args:
-        traceroute_output (str): Raw output from the traceroute command
-
-    Returns:
-        list: A list of dictionaries, each containing information about a hop:
-            - 'hop': The hop number (int)
-            - 'ip': The IP address of the router (str or None if timeout)
-            - 'hostname': The hostname of the router (str or None if same as ip)
-            - 'rtt': List of round-trip times in ms (list of floats, None for timeouts)
-
-    Example:
-    ```
-        [
-            {
-                'hop': 1,
-                'ip': '172.21.160.1',
-                'hostname': 'HELDMANBACK.mshome.net',
-                'rtt': [0.334, 0.311, 0.302]
-            },
-            {
-                'hop': 2,
-                'ip': '10.103.29.254',
-                'hostname': None,
-                'rtt': [3.638, 3.630, 3.624]
-            },
-            {
-                'hop': 3,
-                'ip': None,  # For timeout/asterisk
-                'hostname': None,
-                'rtt': [None, None, None]
-            }
-        ]
-    ```
-    """
-    # Your code here
-    # Hint: Use regular expressions to extract the relevant information
-    # Handle timeouts (asterisks) appropriately
-
-    # Remove this line once you implement the function,
-    # and don't forget to *return* the output
-    pass
 
 # ============================================================================ #
 #                    DO NOT MODIFY THE CODE BELOW THIS LINE                    #
